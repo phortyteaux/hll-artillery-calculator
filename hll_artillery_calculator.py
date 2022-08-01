@@ -38,8 +38,6 @@ def check_argv():
 	return faction
 
 factions = ("us", "de", "ru")
-faction = ""
-
 faction = check_argv()
 print_welcome()
 
