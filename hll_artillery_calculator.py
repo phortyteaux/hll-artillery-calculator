@@ -21,18 +21,20 @@ if sys.argv[1] != "us" and sys.argv[1] != "de" and sys.argv[1] != "ru":
 
 distance = 0
 print("Welcome to the HLL Artillery Calculator! Enter a distance in meters to get the appropriate amount of mils to adjust your gun to. Enter 'quit' to quit.")
-while distance != "quit":
+while True:
 	distance = input("distance to target(m): ")
+	if distance == "quit":
+		sys.exit(0)
 
 	if sys.argv[1] == "us" or sys.argv[1] == "de":
 		try:
 			mils = us_de_calculate(distance)
 			print("mils to target:", mils)
 		except:
-			break
+			continue
 	elif sys.argv[1] == "ru":
 		try:
 			mils = ru_calculate(distance)
 			print("mils to target:", mils)
 		except:
-			break
+			continue
