@@ -33,11 +33,19 @@ else:
 			faction = input("Please enter a faction (us, de, ru): ")	
 
 distance = 0
-print("Welcome to the HLL Artillery Calculator! Enter a distance in meters to get the appropriate amount of mils to adjust your gun to. Enter 'quit' to quit.")
+print("Welcome to the HLL Artillery Calculator!")
+print("Enter a distance in meters to get the appropriate amount of mils to adjust your gun to.")
+print("Enter 'quit' to quit.")
+print("Enter a new faction to change the calculation.")
 while True:
 	distance = input("distance to target(m): ")
 	if distance == "quit":
 		sys.exit(0)
+
+	if distance in factions:
+		faction = distance
+		print("Changed calulation to", faction)
+		continue
 
 	if faction == "us" or faction == "de":
 		try:
