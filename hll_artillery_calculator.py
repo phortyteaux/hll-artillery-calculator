@@ -52,10 +52,12 @@ while True:
 			mils = us_de_calculate(distance)
 			print("mils to target:", mils)
 		except:
+			print("Invalid selection!")
 			continue
 	elif faction == "ru":
 		try:
 			mils = ru_calculate(distance)
 			print("mils to target:", mils)
 		except:
+			print("Invalid selection!")
 			continue
