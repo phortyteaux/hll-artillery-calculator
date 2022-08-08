@@ -54,13 +54,20 @@ def calculate_fire_mission():
 	fm_end.append(float(input("Angle to final target?: ")))
 	fm_end.append(float(input("Distance to final target?: "))) # b
 
-	angular_difference = calculate_angular_difference(float(fm_start[0]), float(fm_end[0])) # A
-	angular_difference = math.radians(angular_difference)
-	angular_step = angular_difference / float(num_points) # A / num_points
+	angular_difference = calculate_angular_difference(fm_start[0], fm_end[0]) # A
+	print("angular_difference:", angular_difference)
+	#angular_difference = math.radians(angular_difference)
+	angular_step = angular_difference / num_points # A / num_points
+	print("A/4:", angular_step)
+	angular_step = math.radians(angular_step)
 
-	line_of_fire = ((fm_end[1]*fm_end[1]) + (fm_start[1]*fm_start[1]) - 2*(fm_end[1])*(fm_start[1])*math.cos(angular_difference)) # a
+	first_part = (fm_end[1] * fm_end[1]) + (fm_start[1] * fm_start[1])
+	second_part = 2 * fm_end[1] * fm_start[1] * math.cos(math.radians(angular_difference))
+	line_of_fire = first_part - second_part # a
+	print("a:", line_of_fire)
 	line_of_fire = math.sqrt(line_of_fire)
 	distance_step = line_of_fire / num_points # a / num_points
+	print("a/4:", distance_step)
 
 	angle_B = (math.sin(angular_difference) * fm_end[1]) / line_of_fire # B
 	angle_B = math.radians(angle_B)
@@ -68,7 +75,8 @@ def calculate_fire_mission():
 	distances = []
 	i = 1
 	for point in range(num_points):
-		new_distance = (math.sin(angle_B) * distance_step*i) / math.sin(angular_step*i) # b2
+		print("i:", i)
+		new_distance = (math.sin(angle_B) * (distance_step*i)) / math.sin((angular_step*i)) # b2
 		print("new_distance:", new_distance)
 		distances.append(new_distance)
 		i += 1
