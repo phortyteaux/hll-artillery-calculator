@@ -6,6 +6,7 @@
 ********************************************************************************"""
 
 import sys
+import math
 
 def print_welcome():
 	print("Welcome to the HLL Artillery Calculator!")
@@ -37,32 +38,73 @@ def check_argv():
 				faction = input("Please enter a faction (us, de, ru): ")
 	return faction
 
-factions = ("us", "de", "ru")
-faction = check_argv()
-print_welcome()
+def calculate_angular_difference(first, last):
+	result = abs(first - last)
+	return result
 
-distance = 0
-while True:
-	distance = input("distance to target(m): ")
-	if distance == "quit":
-		sys.exit(0)
+def calculate_fire_mission():
+	fm_start = []
+	fm_end = []
+	print("")
+	print("BEGIN FIRE MISSION")
+	print("")
+	num_points = int(input("How many points along the line will we fire upon?: "))
+	fm_start.append(float(input("Angle to first target?: ")))
+	fm_start.append(float(input("Distance to first target?: "))) # c
+	fm_end.append(float(input("Angle to final target?: ")))
+	fm_end.append(float(input("Distance to final target?: "))) # b
 
-	if distance in factions:
-		faction = distance
-		print("Changed calulation to", faction)
-		continue
+	angular_difference = calculate_angular_difference(float(fm_start[0]), float(fm_end[0])) # A
+	angular_difference = math.radians(angular_difference)
+	angular_step = angular_difference / float(num_points) # A / num_points
 
-	if faction == "us" or faction == "de":
-		try:
-			mils = us_de_calculate(distance)
-			print("mils to target:", mils)
-		except:
-			print("Invalid selection!")
+	line_of_fire = ((fm_end[1]*fm_end[1]) + (fm_start[1]*fm_start[1]) - 2*(fm_end[1])*(fm_start[1])*math.cos(angular_difference)) # a
+	line_of_fire = math.sqrt(line_of_fire)
+	distance_step = line_of_fire / num_points # a / num_points
+
+	angle_B = (math.sin(angular_difference) * fm_end[1]) / line_of_fire # B
+	angle_B = math.radians(angle_B)
+
+	distances = []
+	i = 1
+	for point in range(num_points):
+		new_distance = (math.sin(angle_B) * distance_step*i) / math.sin(angular_step*i) # b2
+		print("new_distance:", new_distance)
+		distances.append(new_distance)
+		i += 1
+
+
+if __name__ == "__main__":
+	factions = ("us", "de", "ru")
+	faction = check_argv()
+	print_welcome()
+	distance = 0
+	
+	while True:
+		distance = input("distance to target(m): ")
+		if distance == "quit":
+			sys.exit(0)
+
+		if distance in factions:
+			faction = distance
+			print("Changed calulation to", faction)
 			continue
-	elif faction == "ru":
-		try:
-			mils = ru_calculate(distance)
-			print("mils to target:", mils)
-		except:
-			print("Invalid selection!")
+
+		if distance == "fm" or distance == "fire mission":
+			calculate_fire_mission()
 			continue
+
+		if faction == "us" or faction == "de":
+			try:
+				mils = us_de_calculate(distance)
+				print("mils to target:", mils)
+			except:
+				print("Invalid selection!")
+				continue
+		elif faction == "ru":
+			try:
+				mils = ru_calculate(distance)
+				print("mils to target:", mils)
+			except:
+				print("Invalid selection!")
+				continue
