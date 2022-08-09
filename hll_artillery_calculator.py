@@ -22,20 +22,29 @@ def ru_calculate(distance):
 	mils = (-0.213 * float(distance)) + 1141
 	return round(mils)
 
+def get_faction() -> str:
+    user_choice: str = input("Please enter a faction (us, de, ru): ").lower()
+    return user_choice
+
+def check_faction(faction: str) -> bool:
+    if faction not in factions:
+        print("Invalid faction!")
+        return False
+    else:
+        return True
+
 def check_argv():
 	if (len(sys.argv)-1) < 1:
 		print("No command-line arguments found")
-		faction = input("Please enter a faction (us, de, ru): ")
-		while faction not in factions:
-			print("Invalid faction!")
-			faction = input("Please enter a faction (us, de, ru): ")
+		faction = get_faction()
+		while check_faction(faction) == False:
+			faction = get_faction()
 	else:
 		if sys.argv[1] in factions:
 			faction = sys.argv[1]
 		else:
-			while faction not in factions:
-				print("Invalid faction!")
-				faction = input("Please enter a faction (us, de, ru): ")
+			while check_faction(faction) == False:
+				faction = get_faction()
 	return faction
 
 def calculate_angular_difference(first, last):
@@ -95,8 +104,8 @@ if __name__ == "__main__":
 		if distance == "quit":
 			sys.exit(0)
 
-		if distance in factions:
-			faction = distance
+		if distance.lower() in factions:
+			faction = distance.lower()
 			print("Changed calulation to", faction)
 			continue
 
