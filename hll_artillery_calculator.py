@@ -62,15 +62,17 @@ def calculate_fire_mission():
 	angular_step = math.radians(angular_step)
 
 	first_part = (fm_end[1] * fm_end[1]) + (fm_start[1] * fm_start[1])
-	second_part = 2 * fm_end[1] * fm_start[1] * math.cos(math.radians(angular_difference))
-	line_of_fire = first_part - second_part # a
-	print("a:", line_of_fire)
+	second_part = -2 * fm_end[1] * fm_start[1] * math.cos(math.radians(angular_difference))
+	line_of_fire = first_part + second_part # a
 	line_of_fire = math.sqrt(line_of_fire)
+	print("a:", line_of_fire)
 	distance_step = line_of_fire / num_points # a / num_points
 	print("a/4:", distance_step)
 
-	angle_B = (math.sin(angular_difference) * fm_end[1]) / line_of_fire # B
-	angle_B = math.radians(angle_B)
+	angle_B = (math.sin(math.radians(angular_difference)) * fm_end[1]) / line_of_fire # B
+	angle_B = math.asin(angle_B)
+	print("angle_B:", angle_B)
+	#angle_B = math.radians(angle_B)
 
 	distances = []
 	i = 1
