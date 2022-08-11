@@ -42,7 +42,15 @@ def calculate_angular_difference(first, last):
 	result = abs(first - last)
 	return result
 
+def law_of_cosines(side_1, side_2, angle):
+	rad_angle = math.radians(angle)
+	unknown_side_squared = side_1 ** 2 + side_2 ** 2 - 2 * side_1 * side_2 * math.cos(rad_angle)
+	unknown_side = math.sqrt(unknown_side_squared)
+
+	return unknown_side
+
 def calculate_fire_mission():
+	# must add logic for accounting for the ambiguous case
 	fm_start = []
 	fm_end = []
 	print("")
@@ -56,32 +64,46 @@ def calculate_fire_mission():
 
 	angular_difference = calculate_angular_difference(fm_start[0], fm_end[0]) # A
 	print("angular_difference:", angular_difference)
-	#angular_difference = math.radians(angular_difference)
 	angular_step = angular_difference / num_points # A / num_points
 	print("A/4:", angular_step)
-	angular_step = math.radians(angular_step)
-
-	first_part = (fm_end[1] * fm_end[1]) + (fm_start[1] * fm_start[1])
-	second_part = -2 * fm_end[1] * fm_start[1] * math.cos(math.radians(angular_difference))
-	line_of_fire = first_part + second_part # a
-	line_of_fire = math.sqrt(line_of_fire)
+	line_of_fire = law_of_cosines(fm_start[1], fm_end[1], angular_difference)
 	print("a:", line_of_fire)
 	distance_step = line_of_fire / num_points # a / num_points
 	print("a/4:", distance_step)
 
 	angle_B = (math.sin(math.radians(angular_difference)) * fm_end[1]) / line_of_fire # B
+	print("angle_B before asin:", angle_B)
 	angle_B = math.asin(angle_B)
-	print("angle_B:", angle_B)
-	#angle_B = math.radians(angle_B)
+	angle_B = math.degrees(angle_B)
+	print("angle_B after asin:", angle_B)
+	angle_B = 180 - angle_B
+	print("angle_B after subtracting from 180:", angle_B)
 
 	distances = []
-	i = 1
+	i = 0
+	j = 1
 	for point in range(num_points):
+		if fm_start[0] > fm_end[0]:
+			angle = fm_start[0] - angular_step*i
+		else:
+			angle = fm_start[0] + angular_step*i
+		if angle == 0:
+			angle = 360
+		distance = distance_step*j
+
 		print("i:", i)
-		new_distance = (math.sin(angle_B) * (distance_step*i)) / math.sin((angular_step*i)) # b2
+		print("angle used:", angle)
+		print("dist used:", distance)
+		#new_distance = (math.sin(angle_B) * (distance)) / math.sin((math.radians(angle))) # b2
+		new_distance = law_of_cosines(distance, fm_start[1], angle_B)	
 		print("new_distance:", new_distance)
 		distances.append(new_distance)
 		i += 1
+		j += 1
+
+	print("")
+	print("END FIRE MISSION")
+	print("")
 
 
 if __name__ == "__main__":
