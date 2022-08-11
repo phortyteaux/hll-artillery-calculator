@@ -72,23 +72,17 @@ def calculate_fire_mission():
 	fm_end.append(float(input("Distance to final target?: "))) # b
 
 	angular_difference = calculate_angular_difference(fm_start[0], fm_end[0]) # A
-	print("angular_difference:", angular_difference)
 	angular_step = angular_difference / num_points # A / num_points
-	print("A/4:", angular_step)
 	line_of_fire = law_of_cosines(fm_start[1], fm_end[1], angular_difference)
-	print("a:", line_of_fire)
 	distance_step = line_of_fire / num_points # a / num_points
-	print("a/4:", distance_step)
 
 	angle_B = (math.sin(math.radians(angular_difference)) * fm_end[1]) / line_of_fire # B
-	print("angle_B before asin:", angle_B)
 	angle_B = math.asin(angle_B)
 	angle_B = math.degrees(angle_B)
-	print("angle_B after asin:", angle_B)
 	angle_B = 180 - angle_B
-	print("angle_B after subtracting from 180:", angle_B)
 
 	distances = []
+	angles = []
 	i = 1
 	for point in range(num_points):
 		if fm_start[0] > fm_end[0]:
@@ -97,20 +91,27 @@ def calculate_fire_mission():
 				angle_B = 180 - angle_B
 		else:
 			angle = fm_start[0] + angular_step*i
-		"""
-		if angle == 0:
-			angle = 360
-		"""
+		
 		distance = distance_step*i
-
-		print("i:", i)
-		print("angle used:", angle)
-		print("dist used:", distance)
 		#new_distance = (math.sin(angle_B) * (distance)) / math.sin((math.radians(angle))) # b2
 		new_distance = law_of_cosines(distance, fm_start[1], angle_B)	
-		print("new_distance:", new_distance)
+		#print("new_distance:", new_distance)
 		distances.append(new_distance)
+		angles.append(angle)
 		i += 1
+
+	distances.insert(0, fm_start[1])
+	angles.insert(0, fm_start[0])
+	
+	print("")
+	i = 0
+	for i in range(len(distances)):
+		if faction == "us" or faction == "de":
+			mils = us_de_calculate(distances[i])
+			print("TARGET", str(i+1) + ":", "mils:", mils, "angle:", angles[i])
+		elif faction == "ru":
+			mils = ru_calculate(distances[i])
+			print("TARGET", str(i+1) + ":", "mils:", mils, "angle:", angles[i])
 
 	print("")
 	print("END FIRE MISSION")
