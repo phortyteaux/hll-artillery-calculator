@@ -11,8 +11,9 @@ import math
 def print_welcome():
 	print("Welcome to the HLL Artillery Calculator!")
 	print("Enter a distance in meters to get the appropriate amount of mils to adjust your gun to.")
-	print("Enter 'quit' to quit.")
 	print("Enter a new faction to change the calculation.")
+	print("Enter 'fm' or 'fire mission' to begin calculations between two designated map points.")
+	print("Enter 'quit' to quit.")
 
 def us_de_calculate(distance):
 	mils = (-0.237 * float(distance)) + 1002
