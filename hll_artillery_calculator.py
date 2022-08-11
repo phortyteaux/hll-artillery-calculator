@@ -94,6 +94,8 @@ def calculate_fire_mission():
 	for point in range(num_points):
 		if fm_start[0] > fm_end[0]:
 			angle = fm_start[0] - angular_step*i
+			if i == 0:
+				angle_B = 180 - angle_B
 		else:
 			angle = fm_start[0] + angular_step*i
 		if angle == 0:
