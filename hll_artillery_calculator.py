@@ -7,6 +7,7 @@
 
 import sys
 import math
+import numpy as np
 
 def print_welcome():
 	print("Welcome to the HLL Artillery Calculator!")
@@ -59,6 +60,18 @@ def law_of_cosines(side_1, side_2, angle):
 
 	return unknown_side
 
+def calculate_average_difference(input_list):
+	avg_diff = np.array(input_list)
+	avg_diff = np.diff(avg_diff)
+
+	item_sum = 0
+	for item in avg_diff:
+		item_sum += item
+
+	avg_diff = item_sum / len(avg_diff)
+
+	return avg_diff
+
 def calculate_fire_mission():
 	# must add logic for accounting for the ambiguous case
 	fm_start = []
@@ -105,14 +118,23 @@ def calculate_fire_mission():
 	angles.insert(0, fm_start[0])
 	
 	print("")
+	solutions = []
 	i = 0
 	for i in range(len(distances)):
 		if faction == "us" or faction == "de":
 			mils = us_de_calculate(distances[i])
+			solutions.append(mils)
 			print("TARGET", str(i+1) + ":", "mils:", mils, "angle:", angles[i])
 		elif faction == "ru":
 			mils = ru_calculate(distances[i])
+			solutions.append(mils)
 			print("TARGET", str(i+1) + ":", "mils:", mils, "angle:", angles[i])
+
+	avg_diff_mils = calculate_average_difference(solutions)
+	print("mil diff:", avg_diff_mils)
+
+	avg_diff_angles = calculate_average_difference(angles)	
+	print("angle diff:", avg_diff_angles)
 
 	print("")
 	print("END FIRE MISSION")
