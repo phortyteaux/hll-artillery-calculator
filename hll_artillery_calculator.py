@@ -72,19 +72,33 @@ def calculate_average_difference(input_list):
 
 	return avg_diff
 
+def print_start_stop(message="start"):
+	if message == "start":
+		print("")
+		print("BEGIN FIRE MISSION")
+		print("")
+	elif message == "stop":
+		print("")
+		print("END FIRE MISSION")
+		print("")
+	else:
+		print("CHECK STRING PASSED TO print_start_stop()!")
+
+def calculate_special_isoceles_hypotenuse(side):
+	hypotenuse = math.sqrt(2) * side
+	return hypotenuse
+
 def calculate_x():
-	print("")
-	print("BEGIN FIRE MISSION")
-	print("")
-	
+	print_start_stop("start")
 	original_target = input("Distance to original target: ")
+
 
 def calculate_fire_mission():
 	fm_start = []
 	fm_end = []
-	print("")
-	print("BEGIN FIRE MISSION")
-	print("")
+	
+	print_start_stop("start")
+
 	num_points = int(input("How many points along the line will we fire upon?: "))
 	fm_start.append(float(input("Angle to first target?: ")))
 	fm_start.append(float(input("Distance to first target?: "))) # c
@@ -141,10 +155,7 @@ def calculate_fire_mission():
 	avg_diff_angles = calculate_average_difference(angles)	
 	print("angle diff:", avg_diff_angles)
 
-	print("")
-	print("END FIRE MISSION")
-	print("")
-
+	print_start_stop("stop")
 
 if __name__ == "__main__":
 	factions = ("us", "de", "ru")
