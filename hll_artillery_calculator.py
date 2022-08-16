@@ -7,7 +7,6 @@
 
 import sys
 import math
-import numpy as np
 
 def print_welcome():
 	print("Welcome to the HLL Artillery Calculator!")
@@ -61,8 +60,9 @@ def law_of_cosines(side_1, side_2, angle):
 	return unknown_side
 
 def calculate_average_difference(input_list):
-	avg_diff = np.array(input_list)
-	avg_diff = np.diff(avg_diff)
+	from numpy import array, diff
+	avg_diff = array(input_list)
+	avg_diff = diff(avg_diff)
 
 	item_sum = 0
 	for item in avg_diff:
@@ -72,8 +72,14 @@ def calculate_average_difference(input_list):
 
 	return avg_diff
 
+def calculate_x():
+	print("")
+	print("BEGIN FIRE MISSION")
+	print("")
+	
+	original_target = input("Distance to original target: ")
+
 def calculate_fire_mission():
-	# must add logic for accounting for the ambiguous case
 	fm_start = []
 	fm_end = []
 	print("")
@@ -107,9 +113,7 @@ def calculate_fire_mission():
 			angle = fm_start[0] + angular_step*i
 		
 		distance = distance_step*i
-		#new_distance = (math.sin(angle_B) * (distance)) / math.sin((math.radians(angle))) # b2
-		new_distance = law_of_cosines(distance, fm_start[1], angle_B)	
-		#print("new_distance:", new_distance)
+		new_distance = law_of_cosines(distance, fm_start[1], angle_B) #b2
 		distances.append(new_distance)
 		angles.append(angle)
 		i += 1
@@ -130,6 +134,7 @@ def calculate_fire_mission():
 			solutions.append(mils)
 			print("TARGET", str(i+1) + ":", "mils:", mils, "angle:", angles[i])
 
+	print("")
 	avg_diff_mils = calculate_average_difference(solutions)
 	print("mil diff:", avg_diff_mils)
 
