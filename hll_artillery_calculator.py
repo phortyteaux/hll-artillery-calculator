@@ -59,6 +59,19 @@ def law_of_cosines(side_1, side_2, angle):
 
 	return unknown_side
 
+def law_of_sines(side_1, side_2, angle_1):
+	# side_1 == b # side_2 == c # angle_1 == B
+	angle_1 = math.radians(angle_1)
+	unknown_angle = math.asin((side_2 * angle_1) / side_1)
+
+	return math.degrees(unknown_angle)
+
+#def law_of_sines(side_1, angle_1, angle_2):
+
+def calculate_final_angle(angle_1, angle_2):
+	final_angle = 180 - (angle_1 + angle_2)
+	return final_angle
+
 def calculate_average_difference(input_list):
 	from numpy import array, diff
 	avg_diff = array(input_list)
