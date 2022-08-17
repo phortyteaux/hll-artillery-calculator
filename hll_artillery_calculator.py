@@ -60,7 +60,12 @@ def law_of_cosines_side(side_1: float, side_2: float, angle: float) -> float:
 	return unknown_side
 
 def law_of_cosines_angle(side_1: float, side_2: float, side_3: float) -> float:
-	unknown_angle = math.acos((side_1**2) + (side_2**2) - (side_3**2) / (2*side_1*side_2))
+	#unknown_angle = math.acos((side_1**2) + (side_2**2) - (side_3**2) / (2*side_1*side_2))
+	numerator = side_1**2 + side_2**2 - side_3**2
+	denominator = 2 * side_1 * side_2
+	unknown_angle = numerator / denominator
+	unknown_angle = math.acos(unknown_angle)
+	
 	return math.degrees(unknown_angle)
 
 def law_of_sines(side_1, side_2, angle_1):
@@ -110,7 +115,7 @@ def calculate_x():
 	print_start_stop("start")
 	original_target = float(input("Distance to original target: ")) # c
 
-	square_length = float(input("Length of target square:"))
+	square_length = float(input("Length of target square: "))
 	isoceles_side_length = square_length / 2.0
 
 	line_to_new_target = calculate_special_isoceles_hypotenuse(isoceles_side_length) # a
@@ -203,11 +208,11 @@ if __name__ == "__main__":
 			print("Changed calulation to", faction)
 			continue
 
-		if distance.tolower() == "fm" or distance.tolower() == "fire mission":
+		if distance.lower() == "fm" or distance.lower() == "fire mission":
 			calculate_fire_mission()
 			continue
 
-		if distance.tolower() == "x":
+		if distance.lower() == "x":
 			calculate_x()
 			continue
 
