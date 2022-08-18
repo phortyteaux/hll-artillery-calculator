@@ -76,8 +76,6 @@ def law_of_sines(side_1, side_2, angle_1):
 
 	return math.degrees(unknown_angle)
 
-#def law_of_sines(side_1, angle_1, angle_2):
-
 def calculate_final_angle(angle_1, angle_2):
 	final_angle = 180 - (angle_1 + angle_2)
 	return final_angle
@@ -148,13 +146,6 @@ def calculate_x():
 			distances[i] = ru_calculate(distances[i])
 		i += 1
 
-	# this pair is the top right corner of the square/x
-	# to get the top left corner, subtract the angular difference
-	# to get the bottom pair, subtract the square side length from the top distance
-	"""
-	print("distance_to_new_target:", distance_to_new_target)
-	print("angular_difference:", angular_difference)
-	"""
 	print_x(distances, angular_difference)
 
 	print_start_stop("stop")
