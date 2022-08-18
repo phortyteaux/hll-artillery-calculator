@@ -13,6 +13,7 @@ def print_welcome():
 	print("Enter a distance in meters to get the appropriate amount of mils to adjust your gun to.")
 	print("Enter a new faction to change the calculation.")
 	print("Enter 'fm' or 'fire mission' to begin calculations between two designated map points.")
+	print("Enter 'x' or 'X' to calculate a fire mission with an X pattern.")
 	print("Enter 'quit' to quit.")
 
 def us_de_calculate(distance):
@@ -110,8 +111,19 @@ def calculate_special_isoceles_hypotenuse(side):
 	hypotenuse = math.sqrt(2) * side
 	return hypotenuse
 
+def print_x(distances, angle):
+	whitespace = " "
+	num_spaces = len(str(round(distances[0], 2)) + ", -" + str(round(angle, 2)) + "          " + str(round(distances[0], 2)) + ", +" + str(round(angle, 2)))
+	num_spaces = int(num_spaces / 2)
+	num_spaces = int(num_spaces - (len(str(round(distances[2], 2))) / 2))
+	print("")
+	print(str(round(distances[0], 2)) + ", -" + str(round(angle, 2)) + "          " + str(round(distances[0], 2)) + ", +" + str(round(angle, 2)))
+	print(num_spaces*whitespace + str(round(distances[2], 2)))
+	print(str(round(distances[1], 2)) + ", -" + str(round(angle, 2)) + "          " + str(round(distances[1], 2)) + ", +" + str(round(angle, 2)))
+
 def calculate_x():
 	angle_B = 135
+	distances = []
 	print_start_stop("start")
 	original_target = float(input("Distance to original target: ")) # c
 
@@ -123,8 +135,27 @@ def calculate_x():
 
 	angular_difference = law_of_cosines_angle(original_target, distance_to_new_target, line_to_new_target) # A
 
+	distance_to_bottom_target = distance_to_new_target - square_length
+	distances.append(distance_to_new_target)
+	distances.append(distance_to_bottom_target)
+	distances.append(original_target)
+
+	i = 0
+	for distance in distances:
+		if faction == "us" or faction == "de":
+			distances[i] = us_de_calculate(distances[i])
+		elif faction == "ru":
+			distances[i] = ru_calculate(distances[i])
+		i += 1
+
+	# this pair is the top right corner of the square/x
+	# to get the top left corner, subtract the angular difference
+	# to get the bottom pair, subtract the square side length from the top distance
+	"""
 	print("distance_to_new_target:", distance_to_new_target)
 	print("angular_difference:", angular_difference)
+	"""
+	print_x(distances, angular_difference)
 
 	print_start_stop("stop")
 
