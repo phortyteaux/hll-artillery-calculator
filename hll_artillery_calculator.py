@@ -7,21 +7,24 @@
 
 import sys
 import math
+from numpy import array, diff
 
 def print_welcome():
-	print("Welcome to the HLL Artillery Calculator!")
-	print("Enter a distance in meters to get the appropriate amount of mils to adjust your gun to.")
-	print("Enter a new faction to change the calculation.")
-	print("Enter 'fm' or 'fire mission' to begin calculations between two designated map points.")
-	print("Enter 'x' or 'X' to calculate a fire mission with an X pattern.")
-	print("Enter 'quit' to quit.")
+	print(
+"""Welcome to the HLL Artillery Calculator!
+Enter a distance in meters to get the appropriate amount of mils to adjust your gun to.
+Enter a new faction to change the calculation.
+Enter 'fm' or 'fire mission' to begin calculations between two designated map points.
+Enter 'x' or 'X' to calculate a fire mission with an X pattern.
+Enter 'quit' to quit."""
+)
 
-def us_de_calculate(distance):
-	mils = (-0.237 * float(distance)) + 1002
+def us_de_calculate(distance: float) -> float:
+	mils = (-0.237 * distance) + 1002
 	return round(mils)
 
-def ru_calculate(distance):
-	mils = (-0.213 * float(distance)) + 1141
+def ru_calculate(distance: float) -> float:
+	mils = (-0.213 * distance) + 1141
 	return round(mils)
 
 def get_faction() -> str:
@@ -35,7 +38,7 @@ def check_faction(faction: str) -> bool:
     else:
         return True
 
-def check_argv():
+def get_faction_from_argv():
 	if (len(sys.argv)-1) < 1:
 		print("No command-line arguments found")
 		faction = get_faction()
@@ -49,7 +52,7 @@ def check_argv():
 				faction = get_faction()
 	return faction
 
-def calculate_angular_difference(first, last):
+def calculate_angular_difference(first: float, last:float) -> float:
 	result = abs(first - last)
 	return result
 
@@ -62,26 +65,26 @@ def law_of_cosines_side(side_1: float, side_2: float, angle: float) -> float:
 
 def law_of_cosines_angle(side_1: float, side_2: float, side_3: float) -> float:
 	#unknown_angle = math.acos((side_1**2) + (side_2**2) - (side_3**2) / (2*side_1*side_2))
-	numerator = side_1**2 + side_2**2 - side_3**2
-	denominator = 2 * side_1 * side_2
-	unknown_angle = numerator / denominator
+	numerator: float = side_1**2 + side_2**2 - side_3**2
+	denominator: float = 2 * side_1 * side_2
+	unknown_angle: float = numerator / denominator
 	unknown_angle = math.acos(unknown_angle)
 	
 	return math.degrees(unknown_angle)
 
-def law_of_sines(side_1, side_2, angle_1):
+def law_of_sines(side_1: float, side_2: float, angle_1: float) -> float:
 	# side_1 == b # side_2 == c # angle_1 == B
 	angle_1 = math.radians(angle_1)
 	unknown_angle = math.asin((side_2 * angle_1) / side_1)
 
 	return math.degrees(unknown_angle)
 
-def calculate_final_angle(angle_1, angle_2):
-	final_angle = 180 - (angle_1 + angle_2)
+def calculate_final_angle(angle_1: float, angle_2: float) -> float:
+	final_angle: float = 180 - (angle_1 + angle_2)
 	return final_angle
 
+#C: What is 'input_list' suppose to be? numbers? strings? lists?
 def calculate_average_difference(input_list):
-	from numpy import array, diff
 	avg_diff = array(input_list)
 	avg_diff = diff(avg_diff)
 
@@ -95,18 +98,14 @@ def calculate_average_difference(input_list):
 
 def print_start_stop(message="start"):
 	if message == "start":
-		print("")
-		print("BEGIN FIRE MISSION")
-		print("")
+		print("BEGIN FIRE MISSION\n")
 	elif message == "stop":
-		print("")
-		print("END FIRE MISSION")
-		print("")
+		print("END FIRE MISSION\n")
 	else:
 		print("CHECK STRING PASSED TO print_start_stop()!")
 
-def calculate_special_isoceles_hypotenuse(side):
-	hypotenuse = math.sqrt(2) * side
+def calculate_special_isosceles_hypotenuse(side: float) -> float:
+	hypotenuse: float = math.sqrt(2) * side
 	return hypotenuse
 
 def print_x(distances, angle):
@@ -126,9 +125,9 @@ def calculate_x():
 	original_target = float(input("Distance to original target: ")) # c
 
 	square_length = float(input("Length of target square: "))
-	isoceles_side_length = square_length / 2.0
+	isosceles_side_length = square_length / 2.0
 
-	line_to_new_target = calculate_special_isoceles_hypotenuse(isoceles_side_length) # a
+	line_to_new_target = calculate_special_isosceles_hypotenuse(isosceles_side_length) # a
 	distance_to_new_target = law_of_cosines_side(original_target, line_to_new_target, angle_B) # b
 
 	angular_difference = law_of_cosines_angle(original_target, distance_to_new_target, line_to_new_target) # A
@@ -213,42 +212,48 @@ def calculate_fire_mission():
 	print("angle diff:", avg_diff_angles)
 
 	print_start_stop("stop")
+ 
+#Globals
+factions: tuple[str, str, str] = ("us", "de", "ru")
+faction: str
 
 if __name__ == "__main__":
-	factions = ("us", "de", "ru")
-	faction = check_argv()
 	print_welcome()
-	distance = 0
+	faction = get_faction_from_argv()
+	
+	user_input: float | str = 0
 	
 	while True:
-		distance = input("distance to target(m): ")
-		if distance == "quit":
-			sys.exit(0)
-
-		if distance.lower() in factions:
-			faction = distance.lower()
-			print("Changed calulation to", faction)
+		user_input = input("distance to target(m): ")
+		if user_input.isdigit():
+			distance = float(user_input)
+			if faction == "us" or faction == "de":
+				try:
+					mils = us_de_calculate(distance)
+					print("mils to target: {mils}")
+				except:
+					print("Invalid selection!")
+			elif faction == "ru":
+				try:
+					mils = ru_calculate(distance)
+					print("mils to target: {mils}")
+				except:
+					print("Invalid selection!")
 			continue
 
-		if distance.lower() == "fm" or distance.lower() == "fire mission":
-			calculate_fire_mission()
-			continue
+		elif user_input.isalpha():
+			user_input = str(user_input)
+			if user_input == "quit":
+				sys.exit(0)
 
-		if distance.lower() == "x":
-			calculate_x()
-			continue
+			if user_input.lower() in factions:
+				faction = user_input.lower()
+				print(f"Changed calculation to {faction}")
 
-		if faction == "us" or faction == "de":
-			try:
-				mils = us_de_calculate(distance)
-				print("mils to target:", mils)
-			except:
-				print("Invalid selection!")
-				continue
-		elif faction == "ru":
-			try:
-				mils = ru_calculate(distance)
-				print("mils to target:", mils)
-			except:
-				print("Invalid selection!")
-				continue
+			elif user_input.lower() == "fm" or user_input.lower() == "fire mission":
+				calculate_fire_mission()
+
+			elif user_input.lower() == "x":
+				calculate_x()
+
+			continue
