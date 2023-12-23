@@ -13,6 +13,22 @@ from numpy import array, diff
 factions: tuple[str, str, str] = ("us", "de", "ru")
 faction: str
 
+class Target():
+	def __init__(self, target_number: int, distance: float | None = None, angle: float | None = None):
+		if distance == None:
+			self.distance = float(input(f"Distance to target {target_number}?: "))
+		else:
+			self.distance = distance
+
+		if angle == None:
+			self.angle = float(input(f"Angle to target {target_number}?: "))
+		else:
+			self.angle = angle
+		
+
+	distance: float
+	angle: float
+
 def print_welcome():
 	print(
 """Welcome to the HLL Artillery Calculator!
@@ -23,16 +39,15 @@ Enter 'x' or 'X' to calculate a fire mission with an X pattern.
 Enter 'quit' to quit."""
 )
 
-def us_de_calculate(distance: float) -> float:
-	mils = (-0.237 * distance) + 1002
-	return round(mils)
-
-def ru_calculate(distance: float) -> float:
-	mils = (-0.213 * distance) + 1141
+def calculate_mils(distance: float) -> float:
+	if faction in ("us", "de"):
+		mils = (-0.237 * distance) + 1002
+	else:
+		mils = (-0.213 * distance) + 1141
 	return round(mils)
 
 def get_faction() -> str:
-    user_choice: str = input("Please enter a faction (us, de, ru): ").lower()
+    user_choice: str = input(f"Please enter a faction from these options- {factions}: ").lower()
     return user_choice
 
 def check_faction(faction: str) -> bool:
@@ -87,11 +102,11 @@ def calculate_final_angle(angle_1: float, angle_2: float) -> float:
 	final_angle: float = 180 - (angle_1 + angle_2)
 	return final_angle
 
-def calculate_average_difference(input_list: list[float]):
+def calculate_average_difference(input_list: list[float]) -> float:
 	avg_diff = array(input_list)
 	avg_diff = diff(avg_diff)
 
-	item_sum = 0
+	item_sum: float = 0
 	for item in avg_diff:
 		item_sum += item
 
@@ -141,75 +156,54 @@ def calculate_x_fire_mission():
 	distances.append(original_target)
 
 	for index, distance in enumerate(distances):
-		if faction == "us" or faction == "de":
-			distances[index] = us_de_calculate(distance)
-		elif faction == "ru":
-			distances[index] = ru_calculate(distance)
+		distances[index] = calculate_mils(distance)
 
 	print_x_fire_mission(distances, angular_difference)
 
 	print_start_stop(False)
 
 def calculate_fire_mission():
-	fm_start = []
-	fm_end = []
-	
+	fm_start: Target = Target(1) # distance is c
+	fm_end: Target = Target(2) # distance is b
+	fm_targets_list: list[Target] = [fm_start]
+
 	print_start_stop(True)
 
 	num_points = int(input("How many points along the line will we fire upon?: "))
-	fm_start.append(float(input("Angle to first target?: ")))
-	fm_start.append(float(input("Distance to first target?: "))) # c
-	fm_end.append(float(input("Angle to final target?: ")))
-	fm_end.append(float(input("Distance to final target?: "))) # b
 
-	angular_difference = calculate_angular_difference(fm_start[0], fm_end[0]) # A
+	angular_difference = calculate_angular_difference(fm_start.angle, fm_end.angle) # A
 	angular_step = angular_difference / num_points # A / num_points
-	line_of_fire = law_of_cosines_side(fm_start[1], fm_end[1], angular_difference)
+	line_of_fire = law_of_cosines_side(fm_start.distance, fm_end.distance, angular_difference)
 	distance_step = line_of_fire / num_points # a / num_points
 
-	angle_B = (math.sin(math.radians(angular_difference)) * fm_end[1]) / line_of_fire # B
+	angle_B = (math.sin(math.radians(angular_difference)) * fm_end.distance) / line_of_fire # B
 	angle_B = math.asin(angle_B)
 	angle_B = math.degrees(angle_B)
 	angle_B = 180 - angle_B
 
-	distances = []
-	angles = []
-	i = 1
-	for point in range(num_points):
-		if fm_start[0] > fm_end[0]:
-			angle = fm_start[0] - angular_step*i
-			if i == 1:
+	# C: I think this does the same thing
+	for point in range(1, num_points+1):
+		if fm_start.angle > fm_end.angle:
+			angle = fm_start.angle - angular_step*point
+			if point == 1:
 				angle_B = 180 - angle_B
 		else:
-			angle = fm_start[0] + angular_step*i
+			angle = fm_start.angle + angular_step*point
 		
-		distance = distance_step*i
-		new_distance = law_of_cosines_side(distance, fm_start[1], angle_B) #b2
-		distances.append(new_distance)
-		angles.append(angle)
-		i += 1
-
-	distances.insert(0, fm_start[1])
-	angles.insert(0, fm_start[0])
+		distance = distance_step*point
+		new_distance = law_of_cosines_side(distance, fm_start.distance, angle_B) #b2
+		fm_targets_list.append(Target(point, new_distance, angle))
 	
-	print("")
-	solutions = []
-	i = 0
-	for i in range(len(distances)):
-		if faction == "us" or faction == "de":
-			mils = us_de_calculate(distances[i])
-			solutions.append(mils)
-			print("TARGET", str(i+1) + ":", "mils:", mils, "angle:", angles[i])
-		elif faction == "ru":
-			mils = ru_calculate(distances[i])
-			solutions.append(mils)
-			print("TARGET", str(i+1) + ":", "mils:", mils, "angle:", angles[i])
+	mils_solutions = []
+	for index, target in enumerate(fm_targets_list):
+		mils: float = calculate_mils(target.distance)
+		mils_solutions.append(mils)
+		print(f"\nTARGET {index+1}: mils={mils}, angle={target.angle}\n")
 
-	print("")
-	avg_diff_mils = calculate_average_difference(solutions)
+	avg_diff_mils = calculate_average_difference(mils_solutions)
 	print("mil diff:", avg_diff_mils)
 
-	avg_diff_angles = calculate_average_difference(angles)	
+	avg_diff_angles = calculate_average_difference([angle for target.angle in fm_targets_list])
 	print("angle diff:", avg_diff_angles)
 
 	print_start_stop(False)
@@ -224,19 +218,10 @@ if __name__ == "__main__":
 		user_input = input("distance to target(m): ")
 		if user_input.isdigit():
 			distance = float(user_input)
-			if faction == "us" or faction == "de":
-				try:
-					mils = us_de_calculate(distance)
-					print("mils to target: {mils}")
-				except:
-					print("Invalid selection!")
-			elif faction == "ru":
-				try:
-					mils = ru_calculate(distance)
-					print("mils to target: {mils}")
-				except:
-					print("Invalid selection!")
-			continue
+			if faction in factions:
+				print(f"mils to target: {calculate_mils(distance)}")
+			else:
+				print("Invalid selection!")
 
 		elif user_input.isalpha():
 			user_input = str(user_input)
