@@ -9,6 +9,10 @@ import sys
 import math
 from numpy import array, diff
 
+#Globals
+factions: tuple[str, str, str] = ("us", "de", "ru")
+faction: str
+
 def print_welcome():
 	print(
 """Welcome to the HLL Artillery Calculator!
@@ -74,8 +78,8 @@ def law_of_cosines_angle(side_1: float, side_2: float, side_3: float) -> float:
 
 def law_of_sines(side_1: float, side_2: float, angle_1: float) -> float:
 	# side_1 == b # side_2 == c # angle_1 == B
-	angle_1 = math.radians(angle_1)
-	unknown_angle = math.asin((side_2 * angle_1) / side_1)
+	angle_1: float = math.radians(angle_1)
+	unknown_angle: float = math.asin((side_2 * angle_1) / side_1)
 
 	return math.degrees(unknown_angle)
 
@@ -83,8 +87,7 @@ def calculate_final_angle(angle_1: float, angle_2: float) -> float:
 	final_angle: float = 180 - (angle_1 + angle_2)
 	return final_angle
 
-#C: What is 'input_list' suppose to be? numbers? strings? lists?
-def calculate_average_difference(input_list):
+def calculate_average_difference(input_list: list[float]):
 	avg_diff = array(input_list)
 	avg_diff = diff(avg_diff)
 
@@ -96,19 +99,19 @@ def calculate_average_difference(input_list):
 
 	return avg_diff
 
-def print_start_stop(message="start"):
-	if message == "start":
+#C: Is this really required?
+def print_start_stop(mission_start: bool = True):
+	if mission_start:
 		print("BEGIN FIRE MISSION\n")
-	elif message == "stop":
-		print("END FIRE MISSION\n")
 	else:
-		print("CHECK STRING PASSED TO print_start_stop()!")
+		print("END FIRE MISSION\n")
 
 def calculate_special_isosceles_hypotenuse(side: float) -> float:
 	hypotenuse: float = math.sqrt(2) * side
 	return hypotenuse
 
-def print_x(distances, angle):
+#C: This function is really messy. I feel like we should rework it with f strings.
+def print_x_fire_mission(distances: list[float], angle: float):
 	whitespace = " "
 	num_spaces = len(str(round(distances[0], 2)) + ", -" + str(round(angle, 2)) + "          " + str(round(distances[0], 2)) + ", +" + str(round(angle, 2)))
 	num_spaces = int(num_spaces / 2)
@@ -118,42 +121,40 @@ def print_x(distances, angle):
 	print(num_spaces*whitespace + str(round(distances[2], 2)))
 	print(str(round(distances[1], 2)) + ", -" + str(round(angle, 2)) + "          " + str(round(distances[1], 2)) + ", +" + str(round(angle, 2)))
 
-def calculate_x():
+def calculate_x_fire_mission():
 	angle_B = 135
-	distances = []
-	print_start_stop("start")
-	original_target = float(input("Distance to original target: ")) # c
+	distances: list[float] = []
+	print_start_stop(True)
+	original_target: float = float(input("Distance to original target: ")) # c
 
-	square_length = float(input("Length of target square: "))
-	isosceles_side_length = square_length / 2.0
+	square_length: float = float(input("Length of target square: "))
+	isosceles_side_length: float = square_length / 2.0
 
-	line_to_new_target = calculate_special_isosceles_hypotenuse(isosceles_side_length) # a
-	distance_to_new_target = law_of_cosines_side(original_target, line_to_new_target, angle_B) # b
+	line_to_new_target: float = calculate_special_isosceles_hypotenuse(isosceles_side_length) # a
+	distance_to_new_target: float = law_of_cosines_side(original_target, line_to_new_target, angle_B) # b
 
-	angular_difference = law_of_cosines_angle(original_target, distance_to_new_target, line_to_new_target) # A
+	angular_difference: float = law_of_cosines_angle(original_target, distance_to_new_target, line_to_new_target) # A
 
-	distance_to_bottom_target = distance_to_new_target - square_length
+	distance_to_bottom_target: float = distance_to_new_target - square_length
 	distances.append(distance_to_new_target)
 	distances.append(distance_to_bottom_target)
 	distances.append(original_target)
 
-	i = 0
-	for distance in distances:
+	for index, distance in enumerate(distances):
 		if faction == "us" or faction == "de":
-			distances[i] = us_de_calculate(distances[i])
+			distances[index] = us_de_calculate(distance)
 		elif faction == "ru":
-			distances[i] = ru_calculate(distances[i])
-		i += 1
+			distances[index] = ru_calculate(distance)
 
-	print_x(distances, angular_difference)
+	print_x_fire_mission(distances, angular_difference)
 
-	print_start_stop("stop")
+	print_start_stop(False)
 
 def calculate_fire_mission():
 	fm_start = []
 	fm_end = []
 	
-	print_start_stop("start")
+	print_start_stop(True)
 
 	num_points = int(input("How many points along the line will we fire upon?: "))
 	fm_start.append(float(input("Angle to first target?: ")))
@@ -211,11 +212,7 @@ def calculate_fire_mission():
 	avg_diff_angles = calculate_average_difference(angles)	
 	print("angle diff:", avg_diff_angles)
 
-	print_start_stop("stop")
- 
-#Globals
-factions: tuple[str, str, str] = ("us", "de", "ru")
-faction: str
+	print_start_stop(False)
 
 if __name__ == "__main__":
 	print_welcome()
@@ -254,6 +251,6 @@ if __name__ == "__main__":
 				calculate_fire_mission()
 
 			elif user_input.lower() == "x":
-				calculate_x()
+				calculate_x_fire_mission()
 
 			continue
