@@ -9,26 +9,132 @@ import sys
 import math
 from numpy import array, diff
 
-def print_welcome():
+#Globals
+factions: tuple[str, str, str] = ("us", "de", "ru")
+faction: str
+
+#Classes
+class Point():
+	"""
+	Class for cartesean operations.
+	Will need some functions to output Targets
+	Ideally will also output HLL Map numbers.
+	"""
+	def __init__(self, x: float, y: float) -> None:
+		self.x = x
+		self.y = y
+	
+	def __str__(self) -> str:
+		return f"{self.x}, {self.y}"
+	
+	def __add__(self, point: 'Point') -> 'Point':
+		return Point(self.x + point.x, self.y + point.y)
+	
+	def __sub__(self, point: 'Point') -> 'Point':
+		return Point(self.x - point.x, self.y - point.y)
+
+class Target():
+
+	def __init__(self, target_number: int, distance: float | None = None, angle: float | None = None):
+		if distance == None:
+			self.distance = float(input(f"Distance to target {target_number}?: "))
+		else:
+			self.distance = distance
+
+		if angle == None:
+			self.angle = float(input(f"Angle to target {target_number}?: "))
+		else:
+			self.angle = angle
+
+	distance: float
+	coordinates: Point # Will be used later for cartesian operations
+	angle: float
+
+	def get_mils(self) -> float:
+		"""Converts the distance to the target to mils for in game use
+
+		Args:
+			distance (float): distance from the gun to the target
+
+		Returns:
+			float: the converted mils
+		"""
+		if faction in ("us", "de"):
+			mils = (-0.237 * self.distance) + 1002
+		else:
+			mils = (-0.213 * self.distance) + 1141
+		return round(mils)
+
+#Decorators
+def fire_mission_decorator(function: callable):
+	def wrapper():
+		print("BEGIN FIRE MISSION\n")
+		function()
+		print("END FIRE MISSION\n")
+
+	return wrapper
+
+#Math
+def calculate_angular_difference(first_target: Target, last_target: Target) -> float:
+	return abs(first_target.angle - last_target.angle)
+
+def law_of_cosines_side(side_1: float, side_2: float, angle: float) -> float:
+	rad_angle = math.radians(angle)
+	unknown_side_squared = side_1 ** 2 + side_2 ** 2 - 2 * side_1 * side_2 * math.cos(rad_angle)
+	unknown_side = math.sqrt(unknown_side_squared)
+
+	return unknown_side
+
+def law_of_cosines_angle(side_1: float, side_2: float, side_3: float) -> float:
+	#unknown_angle = math.acos((side_1**2) + (side_2**2) - (side_3**2) / (2*side_1*side_2))
+	numerator: float = side_1**2 + side_2**2 - side_3**2
+	denominator: float = 2 * side_1 * side_2
+	unknown_angle: float = numerator / denominator
+	unknown_angle = math.acos(unknown_angle)
+	
+	return math.degrees(unknown_angle)
+
+def law_of_sines(side_1: float, side_2: float, angle_1: float) -> float:
+	# side_1 == b # side_2 == c # angle_1 == B
+	angle_1: float = math.radians(angle_1)
+	unknown_angle: float = math.asin((side_2 * angle_1) / side_1)
+
+	return math.degrees(unknown_angle)
+
+def calculate_final_angle(angle_1: float, angle_2: float) -> float:
+	final_angle: float = 180 - (angle_1 + angle_2)
+	return final_angle
+
+def calculate_average_difference(input_list: list[float]) -> float:
+	avg_diff = array(input_list)
+	avg_diff = diff(avg_diff)
+
+	item_sum: float = 0
+	for item in avg_diff:
+		item_sum += item
+
+	avg_diff = item_sum / len(avg_diff)
+
+	return avg_diff
+
+def calculate_special_isosceles_hypotenuse(side: float) -> float:
+	hypotenuse: float = math.sqrt(2) * side
+	return hypotenuse
+
+
+#General functions
+def print_welcome_message():
 	print(
-"""Welcome to the HLL Artillery Calculator!
-Enter a distance in meters to get the appropriate amount of mils to adjust your gun to.
-Enter a new faction to change the calculation.
-Enter 'fm' or 'fire mission' to begin calculations between two designated map points.
-Enter 'x' or 'X' to calculate a fire mission with an X pattern.
-Enter 'quit' to quit."""
-)
-
-def us_de_calculate(distance: float) -> float:
-	mils = (-0.237 * distance) + 1002
-	return round(mils)
-
-def ru_calculate(distance: float) -> float:
-	mils = (-0.213 * distance) + 1141
-	return round(mils)
+		"Welcome to the HLL Artillery Calculator!\n"
+		"Enter a distance in meters to get the appropriate amount of mils to adjust your gun to.\n"
+		"Enter a new faction to change the calculation.\n"
+		"Enter 'fm' or 'fire mission' to begin calculations between two designated map points.\n"
+		"Enter 'x' or 'X' to calculate a fire mission with an X pattern.\n"
+		"Enter 'quit' to quit."
+	)
 
 def get_faction() -> str:
-    user_choice: str = input("Please enter a faction (us, de, ru): ").lower()
+    user_choice: str = input(f"Please enter a faction from these options- {factions}: ").lower()
     return user_choice
 
 def check_faction(faction: str) -> bool:
@@ -52,194 +158,118 @@ def get_faction_from_argv():
 				faction = get_faction()
 	return faction
 
-def calculate_angular_difference(first: float, last:float) -> float:
-	result = abs(first - last)
-	return result
+#C: This function is really messy. I feel like we should rework it with f strings.
+#C: We should also reorganize the list input so its more rational.
+#C: Upper row being target0, middle being 2, and bottom being 1 feels ugly to me.
+def print_x_fire_mission(Targets: list[Target], angle: float):
+	#C: Wrote this up as an alternative to the messiness of the original.
+	"""
+	#Get the legth of the basic output string.
+	line_segment_length:int = len(f"{round(Targets[0].get_mils(), 2)}, -{round(angle, 2)}")
+	#Use that to create the size of whitespace we want.
+	whitespace:str = " " * line_segment_length
 
-def law_of_cosines_side(side_1: float, side_2: float, angle: float) -> float:
-	rad_angle = math.radians(angle)
-	unknown_side_squared = side_1 ** 2 + side_2 ** 2 - 2 * side_1 * side_2 * math.cos(rad_angle)
-	unknown_side = math.sqrt(unknown_side_squared)
-
-	return unknown_side
-
-def law_of_cosines_angle(side_1: float, side_2: float, side_3: float) -> float:
-	#unknown_angle = math.acos((side_1**2) + (side_2**2) - (side_3**2) / (2*side_1*side_2))
-	numerator: float = side_1**2 + side_2**2 - side_3**2
-	denominator: float = 2 * side_1 * side_2
-	unknown_angle: float = numerator / denominator
-	unknown_angle = math.acos(unknown_angle)
-	
-	return math.degrees(unknown_angle)
-
-def law_of_sines(side_1: float, side_2: float, angle_1: float) -> float:
-	# side_1 == b # side_2 == c # angle_1 == B
-	angle_1 = math.radians(angle_1)
-	unknown_angle = math.asin((side_2 * angle_1) / side_1)
-
-	return math.degrees(unknown_angle)
-
-def calculate_final_angle(angle_1: float, angle_2: float) -> float:
-	final_angle: float = 180 - (angle_1 + angle_2)
-	return final_angle
-
-#C: What is 'input_list' suppose to be? numbers? strings? lists?
-def calculate_average_difference(input_list):
-	avg_diff = array(input_list)
-	avg_diff = diff(avg_diff)
-
-	item_sum = 0
-	for item in avg_diff:
-		item_sum += item
-
-	avg_diff = item_sum / len(avg_diff)
-
-	return avg_diff
-
-def print_start_stop(message="start"):
-	if message == "start":
-		print("BEGIN FIRE MISSION\n")
-	elif message == "stop":
-		print("END FIRE MISSION\n")
-	else:
-		print("CHECK STRING PASSED TO print_start_stop()!")
-
-def calculate_special_isosceles_hypotenuse(side: float) -> float:
-	hypotenuse: float = math.sqrt(2) * side
-	return hypotenuse
-
-def print_x(distances, angle):
+	#We're outputting 2, 1, 2 targets on each line. So we can consider the block as being made of 3 parts.
+	#By inputting the whitespace in the proper place, it'll space everything out nicely.
+	print(
+		f"{round(Targets[0].get_mils(), 2)}, -{round(angle, 2)}{whitespace}{round(Targets[0].get_mils(), 2)}, +{round(angle, 2)}\n"
+		f"{whitespace}{round(Targets[2].get_mils(), 2)}\n"
+		f"{round(Targets[1].get_mils(), 2)}, -{round(angle, 2)}{whitespace}{round(Targets[1].get_mils(), 2)}, +{round(angle, 2)}"
+	)
+	"""
 	whitespace = " "
-	num_spaces = len(str(round(distances[0], 2)) + ", -" + str(round(angle, 2)) + "          " + str(round(distances[0], 2)) + ", +" + str(round(angle, 2)))
+	num_spaces = len(
+		f"{round(Targets[0].get_mils(), 2)}, -{round(angle, 2)}          {round(Targets[0].get_mils(), 2)}, +{round(angle, 2)}"
+	)
 	num_spaces = int(num_spaces / 2)
-	num_spaces = int(num_spaces - (len(str(round(distances[2], 2))) / 2))
-	print("")
-	print(str(round(distances[0], 2)) + ", -" + str(round(angle, 2)) + "          " + str(round(distances[0], 2)) + ", +" + str(round(angle, 2)))
-	print(num_spaces*whitespace + str(round(distances[2], 2)))
-	print(str(round(distances[1], 2)) + ", -" + str(round(angle, 2)) + "          " + str(round(distances[1], 2)) + ", +" + str(round(angle, 2)))
+	num_spaces = int(num_spaces - (len(str(round(Targets[2].get_mils(), 2))) / 2))
+	print(str(round(Targets[0].get_mils(), 2)) + ", -" + str(round(angle, 2)) + "          " + str(round(Targets[0].get_mils(), 2)) + ", +" + str(round(angle, 2)))
+	print(num_spaces*whitespace + str(round(Targets[2].get_mils(), 2)))
+	print(str(round(Targets[1].get_mils(), 2)) + ", -" + str(round(angle, 2)) + "          " + str(round(Targets[1].get_mils(), 2)) + ", +" + str(round(angle, 2)))
 
-def calculate_x():
+@fire_mission_decorator
+def calculate_x_fire_mission():
+	#C: Not sure why we're using 135 degrees here.
+	#C: We can do it much easier with a square rather than a rectangle.
+	#TODO: Talk to Max about converting this to square
+	#TODO: Update to use Target class
 	angle_B = 135
-	distances = []
-	print_start_stop("start")
-	original_target = float(input("Distance to original target: ")) # c
-
-	square_length = float(input("Length of target square: "))
-	isosceles_side_length = square_length / 2.0
-
-	line_to_new_target = calculate_special_isosceles_hypotenuse(isosceles_side_length) # a
-	distance_to_new_target = law_of_cosines_side(original_target, line_to_new_target, angle_B) # b
-
-	angular_difference = law_of_cosines_angle(original_target, distance_to_new_target, line_to_new_target) # A
-
-	distance_to_bottom_target = distance_to_new_target - square_length
-	distances.append(distance_to_new_target)
-	distances.append(distance_to_bottom_target)
-	distances.append(original_target)
-
-	i = 0
-	for distance in distances:
-		if faction == "us" or faction == "de":
-			distances[i] = us_de_calculate(distances[i])
-		elif faction == "ru":
-			distances[i] = ru_calculate(distances[i])
-		i += 1
-
-	print_x(distances, angular_difference)
-
-	print_start_stop("stop")
-
-def calculate_fire_mission():
-	fm_start = []
-	fm_end = []
+	fm_targets_list: list[Target] = []
 	
-	print_start_stop("start")
+	#C: Is the original target the center of the X?
+	original_target: float = float(input("Distance to original target: ")) # c
+
+	square_length: float = float(input("Length of target square: "))
+	isosceles_side_length: float = square_length / 2.0
+
+	line_to_new_target: float = calculate_special_isosceles_hypotenuse(isosceles_side_length) # a
+	distance_to_new_target: float = law_of_cosines_side(original_target, line_to_new_target, angle_B) # b
+	distance_to_bottom_target: float = distance_to_new_target - square_length
+
+	angular_difference: float = law_of_cosines_angle(original_target, distance_to_new_target, line_to_new_target) # A
+
+	for index, distance in enumerate([distance_to_new_target, distance_to_bottom_target, original_target]):
+		fm_targets_list.append(Target(index+1, distance, angular_difference))
+
+	print_x_fire_mission(fm_targets_list, angular_difference)
+
+@fire_mission_decorator
+def calculate_line_fire_mission():
+	fm_start_target: Target = Target(1) # distance is c
+	fm_end_target: Target = Target(2) # distance is b
+	fm_targets_list: list[Target] = [fm_start_target]
 
 	num_points = int(input("How many points along the line will we fire upon?: "))
-	fm_start.append(float(input("Angle to first target?: ")))
-	fm_start.append(float(input("Distance to first target?: "))) # c
-	fm_end.append(float(input("Angle to final target?: ")))
-	fm_end.append(float(input("Distance to final target?: "))) # b
 
-	angular_difference = calculate_angular_difference(fm_start[0], fm_end[0]) # A
+	angular_difference = calculate_angular_difference(fm_start_target, fm_end_target) # A
 	angular_step = angular_difference / num_points # A / num_points
-	line_of_fire = law_of_cosines_side(fm_start[1], fm_end[1], angular_difference)
+	line_of_fire = law_of_cosines_side(fm_start_target.distance, fm_end_target.distance, angular_difference)
 	distance_step = line_of_fire / num_points # a / num_points
 
-	angle_B = (math.sin(math.radians(angular_difference)) * fm_end[1]) / line_of_fire # B
+	angle_B = (math.sin(math.radians(angular_difference)) * fm_end_target.distance) / line_of_fire # B
 	angle_B = math.asin(angle_B)
 	angle_B = math.degrees(angle_B)
 	angle_B = 180 - angle_B
 
-	distances = []
-	angles = []
-	i = 1
-	for point in range(num_points):
-		if fm_start[0] > fm_end[0]:
-			angle = fm_start[0] - angular_step*i
-			if i == 1:
+	# C: I think this does the same thing as the old one. Please review thoroughly.
+	for point in range(1, num_points+1):
+		if fm_start_target.angle > fm_end_target.angle:
+			angle = fm_start_target.angle - angular_step*point
+			if point == 1:
 				angle_B = 180 - angle_B
 		else:
-			angle = fm_start[0] + angular_step*i
+			angle = fm_start_target.angle + angular_step*point
 		
-		distance = distance_step*i
-		new_distance = law_of_cosines_side(distance, fm_start[1], angle_B) #b2
-		distances.append(new_distance)
-		angles.append(angle)
-		i += 1
-
-	distances.insert(0, fm_start[1])
-	angles.insert(0, fm_start[0])
+		distance = distance_step*point
+		new_distance = law_of_cosines_side(distance, fm_start_target.distance, angle_B) #b2
+		fm_targets_list.append(Target(point, new_distance, angle))
 	
-	print("")
-	solutions = []
-	i = 0
-	for i in range(len(distances)):
-		if faction == "us" or faction == "de":
-			mils = us_de_calculate(distances[i])
-			solutions.append(mils)
-			print("TARGET", str(i+1) + ":", "mils:", mils, "angle:", angles[i])
-		elif faction == "ru":
-			mils = ru_calculate(distances[i])
-			solutions.append(mils)
-			print("TARGET", str(i+1) + ":", "mils:", mils, "angle:", angles[i])
+	for index, target in enumerate(fm_targets_list):
+		print(f"\nTARGET {index+1}: mils={target.get_mils()}, angle={target.angle}\n")
 
-	print("")
-	avg_diff_mils = calculate_average_difference(solutions)
+	avg_diff_mils = calculate_average_difference([target.get_mils() for target in fm_targets_list])
 	print("mil diff:", avg_diff_mils)
 
-	avg_diff_angles = calculate_average_difference(angles)	
+	avg_diff_angles = calculate_average_difference([target.angle for target in fm_targets_list])
 	print("angle diff:", avg_diff_angles)
 
-	print_start_stop("stop")
- 
-#Globals
-factions: tuple[str, str, str] = ("us", "de", "ru")
-faction: str
 
 if __name__ == "__main__":
-	print_welcome()
+	print_welcome_message()
 	faction = get_faction_from_argv()
 	
-	user_input: float | str = 0
-	
+	user_input: float | str
+
+	#C: Eventually I'd like to be able to save/load targets so the user can see a history
+	user_target_list: list[Target] = []
 	while True:
 		user_input = input("distance to target(m): ")
 		if user_input.isdigit():
-			distance = float(user_input)
-			if faction == "us" or faction == "de":
-				try:
-					mils = us_de_calculate(distance)
-					print("mils to target: {mils}")
-				except:
-					print("Invalid selection!")
-			elif faction == "ru":
-				try:
-					mils = ru_calculate(distance)
-					print("mils to target: {mils}")
-				except:
-					print("Invalid selection!")
-			continue
+			user_target_list.append(Target(user_target_list.count, user_input))
+			if faction in factions:
+				print(f"mils to target: {user_target_list[-1].get_mils()}")
+			else:
+				print("Invalid selection!")
 
 		elif user_input.isalpha():
 			user_input = str(user_input)
@@ -251,9 +281,9 @@ if __name__ == "__main__":
 				print(f"Changed calculation to {faction}")
 
 			elif user_input.lower() == "fm" or user_input.lower() == "fire mission":
-				calculate_fire_mission()
+				calculate_line_fire_mission()
 
 			elif user_input.lower() == "x":
-				calculate_x()
+				calculate_x_fire_mission()
 
 			continue
