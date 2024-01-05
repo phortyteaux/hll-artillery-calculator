@@ -7,16 +7,36 @@
 
 import sys
 import math
+import argparse
+from typing import Callable
 from numpy import array, diff
+from numpy.typing import NDArray
 
-#Globals
+## Globals
+# Tuple of all possible user factions
 factions: tuple[str, str, str] = ("us", "de", "ru")
+# Currently selected user faction
 faction: str
+
+# Parser for launch arguments
+parser = argparse.ArgumentParser(
+	prog= "Hell Let Loose Artillery Calculator",
+ 	description = "This program accepts a distance in meters and returns a value of mils to adjust your barrel to."
+)
+parser.add_argument(
+	"-f",
+	"--faction",
+	choices = factions,
+	help = "The faction you are playing as",
+	type = str,
+	action="store",
+	default=None
+)
 
 #Classes
 class Point():
 	"""
-	Class for cartesean operations.
+	Class for cartesian operations.
 	Will need some functions to output Targets
 	Ideally will also output HLL Map numbers.
 	"""
@@ -35,16 +55,32 @@ class Point():
 
 class Target():
 
-	def __init__(self, target_number: int, distance: float | None = None, angle: float | None = None):
+	def __init__(self, target_number: int | None = None, distance: float | None = None, angle: float | None = None):
+		get_distance_string: str = "Distance to target"
+		get_angle_string: str = "Angle to target"
+		if isinstance(target_number, float):
+			get_distance_string = f"{get_distance_string} {target_number}"
+			get_angle_string = f"{get_angle_string} {target_number}"
+
 		if distance == None:
-			self.distance = float(input(f"Distance to target {target_number}?: "))
-		else:
+			self.distance = float(input(f"{get_distance_string}?: "))
+		elif isinstance(distance, float):
 			self.distance = distance
+		else:
+			raise TypeError(
+       			f"Argument 'distance' is not a Float or None.\n" 
+                f"Given argument is of type {type(distance)}"
+            )
 
 		if angle == None:
-			self.angle = float(input(f"Angle to target {target_number}?: "))
-		else:
+			self.angle = float(input(f"{get_angle_string}?: "))
+		elif isinstance(angle, float):
 			self.angle = angle
+		else:
+			raise TypeError(
+       			f"Argument 'angle' is not a Float or None.\n" 
+                f"Given argument is of type {type(angle)}"
+            )
 
 	distance: float
 	coordinates: Point # Will be used later for cartesian operations
@@ -66,7 +102,7 @@ class Target():
 		return round(mils)
 
 #Decorators
-def fire_mission_decorator(function: callable):
+def fire_mission_decorator(function: Callable):
 	def wrapper():
 		print("BEGIN FIRE MISSION\n")
 		function()
@@ -96,7 +132,7 @@ def law_of_cosines_angle(side_1: float, side_2: float, side_3: float) -> float:
 
 def law_of_sines(side_1: float, side_2: float, angle_1: float) -> float:
 	# side_1 == b # side_2 == c # angle_1 == B
-	angle_1: float = math.radians(angle_1)
+	angle_1 = math.radians(angle_1)
 	unknown_angle: float = math.asin((side_2 * angle_1) / side_1)
 
 	return math.degrees(unknown_angle)
@@ -106,14 +142,14 @@ def calculate_final_angle(angle_1: float, angle_2: float) -> float:
 	return final_angle
 
 def calculate_average_difference(input_list: list[float]) -> float:
-	avg_diff = array(input_list)
-	avg_diff = diff(avg_diff)
+	input_array: NDArray = array(input_list, float)
+	avg_diff_array: NDArray = diff(input_array)
 
 	item_sum: float = 0
-	for item in avg_diff:
+	for item in avg_diff_array:
 		item_sum += item
 
-	avg_diff = item_sum / len(avg_diff)
+	avg_diff: float = item_sum / len(avg_diff_array)
 
 	return avg_diff
 
@@ -134,29 +170,27 @@ def print_welcome_message():
 	)
 
 def get_faction() -> str:
-    user_choice: str = input(f"Please enter a faction from these options- {factions}: ").lower()
-    return user_choice
+	user_choice: str = ""
+	while check_faction(user_choice) is not True:
+		user_choice = input(f"Please enter a faction from these options- {factions}: ").lower()
+
+	return user_choice
+
+def set_faction(new_faction: str | None) -> None:
+    global faction
+    #None is Falsy
+    if not new_faction:
+        new_faction = get_faction()
+    if check_faction(new_faction):
+        faction = new_faction
+        print(f"Set Faction to {faction}")
 
 def check_faction(faction: str) -> bool:
-    if faction not in factions:
+    if faction.lower() not in factions:
         print("Invalid faction!")
         return False
     else:
         return True
-
-def get_faction_from_argv():
-	if (len(sys.argv)-1) < 1:
-		print("No command-line arguments found")
-		faction = get_faction()
-		while check_faction(faction) == False:
-			faction = get_faction()
-	else:
-		if sys.argv[1] in factions:
-			faction = sys.argv[1]
-		else:
-			while check_faction(faction) == False:
-				faction = get_faction()
-	return faction
 
 #C: This function is really messy. I feel like we should rework it with f strings.
 #C: We should also reorganize the list input so its more rational.
@@ -164,7 +198,7 @@ def get_faction_from_argv():
 def print_x_fire_mission(Targets: list[Target], angle: float):
 	#C: Wrote this up as an alternative to the messiness of the original.
 	"""
-	#Get the legth of the basic output string.
+	#Get the length of the basic output string.
 	line_segment_length:int = len(f"{round(Targets[0].get_mils(), 2)}, -{round(angle, 2)}")
 	#Use that to create the size of whitespace we want.
 	whitespace:str = " " * line_segment_length
@@ -188,7 +222,7 @@ def print_x_fire_mission(Targets: list[Target], angle: float):
 	print(str(round(Targets[1].get_mils(), 2)) + ", -" + str(round(angle, 2)) + "          " + str(round(Targets[1].get_mils(), 2)) + ", +" + str(round(angle, 2)))
 
 @fire_mission_decorator
-def calculate_x_fire_mission():
+def calculate_x_fire_mission() -> None:
 	#C: Not sure why we're using 135 degrees here.
 	#C: We can do it much easier with a square rather than a rectangle.
 	#TODO: Talk to Max about converting this to square
@@ -214,7 +248,7 @@ def calculate_x_fire_mission():
 	print_x_fire_mission(fm_targets_list, angular_difference)
 
 @fire_mission_decorator
-def calculate_line_fire_mission():
+def calculate_line_fire_mission() -> None:
 	fm_start_target: Target = Target(1) # distance is c
 	fm_end_target: Target = Target(2) # distance is b
 	fm_targets_list: list[Target] = [fm_start_target]
@@ -253,37 +287,53 @@ def calculate_line_fire_mission():
 	avg_diff_angles = calculate_average_difference([target.angle for target in fm_targets_list])
 	print("angle diff:", avg_diff_angles)
 
+def process_user_numeric_input(user_input: float, target_list: list[Target]) -> Target:
+    #Append the target to the list
+	user_target: Target = Target(
+			#Target number = the number of targets in the list+1
+			len(target_list) + 1,
+			#We know the given input is a digit, so this will always work
+			float(user_input)
+		)
+	print(f"mils to target: {user_target.get_mils()}")
+	return user_target
+
+def process_user_text_input(user_input: str) -> None:
+	user_input = user_input.lower()
+	match user_input:
+		
+		case "quit":
+			sys.exit(0)
+
+		case input_faction if user_input in factions:
+			set_faction(input_faction)
+
+		case ["fm" | "fire mission"]:
+			calculate_line_fire_mission()
+
+		case "x":
+			calculate_x_fire_mission()
+
+		case _:
+			print(f"{user_input} is not a supported option. Please try again.")
 
 if __name__ == "__main__":
 	print_welcome_message()
-	faction = get_faction_from_argv()
+	#C: I think I can override/extend this with an Action class. Need to need more into it.
+	args = parser.parse_args()
+	set_faction(args.faction)
 	
 	user_input: float | str
 
 	#C: Eventually I'd like to be able to save/load targets so the user can see a history
 	user_target_list: list[Target] = []
 	while True:
-		user_input = input("distance to target(m): ")
+		print(f"Current faction: {faction}")
+		user_input = input("Input distance to target(m): ")
+		#If the user input is a digit
 		if user_input.isdigit():
-			user_target_list.append(Target(user_target_list.count, user_input))
-			if faction in factions:
-				print(f"mils to target: {user_target_list[-1].get_mils()}")
-			else:
-				print("Invalid selection!")
+			user_input = float(user_input)
+			user_target_list.append(process_user_numeric_input(user_input, user_target_list))
 
 		elif user_input.isalpha():
-			user_input = str(user_input)
-			if user_input == "quit":
-				sys.exit(0)
-
-			if user_input.lower() in factions:
-				faction = user_input.lower()
-				print(f"Changed calculation to {faction}")
-
-			elif user_input.lower() == "fm" or user_input.lower() == "fire mission":
-				calculate_line_fire_mission()
-
-			elif user_input.lower() == "x":
-				calculate_x_fire_mission()
-
-			continue
+			process_user_text_input(user_input)
