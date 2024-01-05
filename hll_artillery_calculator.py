@@ -183,6 +183,7 @@ def set_faction(new_faction: str | None) -> None:
         new_faction = get_faction()
     if check_faction(new_faction):
         faction = new_faction
+        print(f"Set Faction to {faction}")
 
 def check_faction(faction: str) -> bool:
     if faction.lower() not in factions:
@@ -305,8 +306,7 @@ def process_user_text_input(user_input: str) -> None:
 			sys.exit(0)
 
 		case input_faction if user_input in factions:
-			faction = input_faction
-			print(f"Changed calculation to {faction}")
+			set_faction(input_faction)
 
 		case ["fm" | "fire mission"]:
 			calculate_line_fire_mission()
