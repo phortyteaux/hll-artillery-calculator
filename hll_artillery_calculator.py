@@ -7,13 +7,31 @@
 
 import sys
 import math
+import argparse
 from typing import Callable
 from numpy import array, diff
 from numpy.typing import NDArray
 
-#Globals
+## Globals
+# Tuple of all possible user factions
 factions: tuple[str, str, str] = ("us", "de", "ru")
+# Currently selected user faction
 faction: str
+
+# Parser for launch arguments
+parser = argparse.ArgumentParser(
+	prog= "Hell Let Loose Artillery Calculator",
+ 	description = "This program accepts a distance in meters and returns a value of mils to adjust your barrel to."
+)
+parser.add_argument(
+	"-f",
+	"--faction",
+	choices = factions,
+	help = "The faction you are playing as",
+	type = str,
+	action="store",
+	default=None
+)
 
 #Classes
 class Point():
@@ -152,29 +170,26 @@ def print_welcome_message():
 	)
 
 def get_faction() -> str:
-    user_choice: str = input(f"Please enter a faction from these options- {factions}: ").lower()
-    return user_choice
+	user_choice: str = ""
+	while check_faction(user_choice) is not True:
+		user_choice = input(f"Please enter a faction from these options- {factions}: ").lower()
+
+	return user_choice
+
+def set_faction(new_faction: str | None) -> None:
+    global faction
+    #None is Falsy
+    if not new_faction:
+        new_faction = get_faction()
+    if check_faction(new_faction):
+        faction = new_faction
 
 def check_faction(faction: str) -> bool:
-    if faction not in factions:
+    if faction.lower() not in factions:
         print("Invalid faction!")
         return False
     else:
         return True
-
-def get_faction_from_argv():
-	if (len(sys.argv)-1) < 1:
-		print("No command-line arguments found")
-		faction = get_faction()
-		while check_faction(faction) == False:
-			faction = get_faction()
-	else:
-		if sys.argv[1] in factions:
-			faction = sys.argv[1]
-		else:
-			while check_faction(faction) == False:
-				faction = get_faction()
-	return faction
 
 #C: This function is really messy. I feel like we should rework it with f strings.
 #C: We should also reorganize the list input so its more rational.
@@ -304,14 +319,17 @@ def process_user_text_input(user_input: str) -> None:
 
 if __name__ == "__main__":
 	print_welcome_message()
-	faction = get_faction_from_argv()
+	#C: I think I can override/extend this with an Action class. Need to need more into it.
+	args = parser.parse_args()
+	set_faction(args.faction)
 	
 	user_input: float | str
 
 	#C: Eventually I'd like to be able to save/load targets so the user can see a history
 	user_target_list: list[Target] = []
 	while True:
-		user_input = input("distance to target(m): ")
+		print(f"Current faction: {faction}")
+		user_input = input("Input distance to target(m): ")
 		#If the user input is a digit
 		if user_input.isdigit():
 			user_input = float(user_input)
