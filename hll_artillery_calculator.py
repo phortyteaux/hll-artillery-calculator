@@ -18,6 +18,9 @@ factions: tuple[str, str, str] = ("us", "de", "ru")
 # Currently selected user faction
 faction: str
 
+# shell travel time measured in seconds
+SHELL_FLIGHT_TIME = 23
+
 # Parser for launch arguments
 parser = argparse.ArgumentParser(
 	prog= "Hell Let Loose Artillery Calculator",
@@ -248,10 +251,13 @@ def calculate_x_fire_mission() -> None:
 	print_x_fire_mission(fm_targets_list, angular_difference)
 
 @fire_mission_decorator
-def calculate_line_fire_mission() -> None:
-	fm_start_target: Target = Target(1) # distance is c
-	fm_end_target: Target = Target(2) # distance is b
-	fm_targets_list: list[Target] = [fm_start_target]
+def calculate_line_fire_mission(start=None, end=None) -> None:
+	# to-do: let this function take start/end firing points as input
+	#		 so function doesn't need to ask for input but still can
+	if (start, end) == (None, None):
+		fm_start_target: Target = Target(1) # distance is c
+		fm_end_target: Target = Target(2) # distance is b
+		fm_targets_list: list[Target] = [fm_start_target]
 
 	num_points = int(input("How many points along the line will we fire upon?: "))
 
