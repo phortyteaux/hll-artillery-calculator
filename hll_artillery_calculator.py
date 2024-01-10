@@ -327,8 +327,6 @@ if __name__ == "__main__":
 	# TODO: Currently, just getting a firing solution for a known distance also asks user
 	#		for an angle. This is because of the default behavior of the Target class.
 	#		Program should only ask for an angle if one is needed for the calculation.
-	#		Additionally, program currently displays "Invalid faction!" if program is 
-	#		started without passing arguments at run time.
 	print_welcome_message()
 	#C: I think I can override/extend this with an Action class. Need to need more into it.
 	args = parser.parse_args()
