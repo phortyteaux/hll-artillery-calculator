@@ -166,7 +166,7 @@ def print_welcome_message():
 	print(
 		"Welcome to the HLL Artillery Calculator!\n"
 		"Enter a distance in meters to get the appropriate amount of mils to adjust your gun to.\n"
-		"Enter a new faction to change the calculation.\n"
+		"Enter a new faction to change the calculation (us, de, ru).\n"
 		"Enter 'fm' or 'fire mission' to begin calculations between two designated map points.\n"
 		"Enter 'x' or 'X' to calculate a fire mission with an X pattern.\n"
 		"Enter 'quit' to quit."
@@ -326,13 +326,16 @@ def process_user_text_input(user_input: str) -> None:
 if __name__ == "__main__":
 	# TODO: Currently, just getting a firing solution for a known distance also asks user
 	#		for an angle. This is because of the default behavior of the Target class.
-	#		Program should only ask for an angle if one is needed for the calculation
+	#		Program should only ask for an angle if one is needed for the calculation.
 	#		Additionally, program currently displays "Invalid faction!" if program is 
 	#		started without passing arguments at run time.
 	print_welcome_message()
 	#C: I think I can override/extend this with an Action class. Need to need more into it.
 	args = parser.parse_args()
-	set_faction(args.faction)
+	if len(sys.argv) > 1:
+		set_faction(args.faction)
+	else:
+		faction = "us"
 	
 	user_input: float | str
 
