@@ -251,7 +251,7 @@ def calculate_x_fire_mission() -> None:
 	print_x_fire_mission(fm_targets_list, angular_difference)
 
 @fire_mission_decorator
-def calculate_line_fire_mission(start=None, end=None) -> None:
+def calculate_line_fire_mission(start: Target=None, end: Target=None) -> None:
 	# to-do: let this function take start/end firing points as input
 	#		 so function doesn't need to ask for input but still can
 	if (start, end) == (None, None):
@@ -314,7 +314,7 @@ def process_user_text_input(user_input: str) -> None:
 		case input_faction if user_input in factions:
 			set_faction(input_faction)
 
-		case ["fm" | "fire mission"]:
+		case "fm" | "fire mission":
 			calculate_line_fire_mission()
 
 		case "x":
